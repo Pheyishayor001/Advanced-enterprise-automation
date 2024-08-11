@@ -28,7 +28,6 @@ fi
 echo "Cleaning up /enterprise/temp"
 sudo rm -rf /enterprise/temp/*
 
-
 # SYSTEM HEALTH MONITORING
 # Defining the threshold percentage
 THRESHOLD=80
@@ -49,6 +48,12 @@ fi
 # Defining the threshold value
 CPU_THRESHOLD=2.0
 
+# Ensure bc is installed
+if ! command -v bc &> /dev/null; then
+    echo "bc is not installed. Installing bc..."
+    sudo apt-get update && sudo apt-get install -y bc
+fi
+
 # Get the 1-minute load average
 LOAD_AVERAGE=$(uptime | awk -F'load average: ' '{print $2}' | awk '{print $1}')
 
@@ -58,19 +63,25 @@ if (( $(echo "$LOAD_AVERAGE > $CPU_THRESHOLD" | bc -l) )); then
     echo "$(date): WARNING: CPU load average for the past 1 minute is ${LOAD_AVERAGE}." >> "$LOGFILE"
 fi
 
-
 # AUTOMATED REPORTING
 # Generate the report
 ARCHIVE_COUNT=$(ls /enterprise/archive | wc -l)
 REPORT="/var/log/enterprise_report.log"
+
+# Check for permission issues and handle them
+if [ ! -w "$REPORT" ]; then
+    sudo touch "$REPORT"
+    sudo chmod 666 "$REPORT"
+fi
+
 {
     echo "Enterprise Automation Report - $(date)"
     echo "----------------------------------"
     echo "Files Archived: $ARCHIVE_COUNT"
     echo "Disk Usage: $USAGE%"
     echo "CPU Load Average: $LOAD_AVERAGE"
-} > $REPORT
+} > "$REPORT"
 
 # Send the report via email
 EMAIL="admin@example.com"
-mail -s "Enterprise Automation Report" $EMAIL < $REPORT
+mail -s "Enterprise Automation Report" $EMAIL < "$REPORT"
