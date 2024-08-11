@@ -83,5 +83,5 @@ fi
 } > "$REPORT"
 
 # Send the report via email
-EMAIL="admin@example.com"
-mail -s "Enterprise Automation Report" $EMAIL < "$REPORT"
+# EMAIL="admin@example.com"
+# mail -s "Enterprise Automation Report" $EMAIL < "$REPORT"
